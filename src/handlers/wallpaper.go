@@ -19,7 +19,13 @@ func RandomWallpaper() error {
 
 	wallpaperPath := os.Getenv("WALLPAPERS_DIR") + wallpaper
 
-	cmd := exec.Command("waypaper", "--wallpaper", wallpaperPath)
+	err = initSwww()
+	if err != nil {
+		logrus.Errorf("Shit went sideways: %v", err)
+		return err
+	}
+
+	cmd := exec.Command("swww", "img", "--transition-type", "grow", "--transition-pos", "0.0854,0.977", "--transition-step", "90", wallpaperPath)
 	if err := cmd.Run(); err != nil {
 		return err
 	}
@@ -44,8 +50,9 @@ func RandomWallpaper() error {
 			}
 
 			cmd := exec.Command(parts[0], parts[1:]...)
-			if err := cmd.Run(); err != nil {
-				logrus.Errorf("Failed to execute command %s: %v", cmdStr, err)
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				logrus.Errorf("Failed to execute command %s: %v - Output: %s", cmdStr, err, string(output))
 			} else {
 				logrus.Infof("Executed post-wallpaper command: %s", cmdStr)
 			}
@@ -53,6 +60,24 @@ func RandomWallpaper() error {
 	}
 
 	logrus.Infof("Changed wallpaper to %s", wallpaper)
+	return nil
+}
+
+func initSwww() error {
+	cmd := exec.Command("swww", "query")
+	if err := cmd.Run(); err == nil {
+		// swww is already running because our fuckass query didn't error out
+		return nil
+	}
+
+	cmd = exec.Command("swww-daemon")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Start()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

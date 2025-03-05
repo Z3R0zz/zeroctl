@@ -14,8 +14,10 @@ sudo mv zeroctl /usr/local/bin/
 echo "Setting executable permissions..."
 sudo chmod +x /usr/local/bin/zeroctl
 
-echo "Restarting zeroctl service..."
-sudo systemctl restart zeroctl
+echo "Stopping current zeroctl process..."
+pkill -f "zeroctl daemon"
 
-echo "Checking service status..."
-sudo systemctl status zeroctl --no-pager --lines=10
+echo "Starting zeroctl..."
+/usr/local/bin/zeroctl daemon &
+
+echo "zeroctl restarted successfully."
