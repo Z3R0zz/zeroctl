@@ -18,11 +18,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := database.InitBoltDB(); err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
+	if len(os.Args) > 1 && os.Args[1] == "daemon" {
+		if err := database.InitBoltDB(); err != nil {
+			fmt.Println("Error:", err)
+			os.Exit(1)
+		}
+		defer database.CloseBoltDB()
 	}
-	defer database.CloseBoltDB()
 
 	rootCmd := &cobra.Command{
 		Use:   "zeroctl",
@@ -32,7 +34,10 @@ func main() {
 	daemonCmd := &cobra.Command{
 		Use:   "daemon",
 		Short: "Start the zeroctl daemon (runs tasks and listens for commands)",
-		Run:   daemon.RunDaemon,
+		PreRun: func(cmd *cobra.Command, args []string) {
+			go startupJobs()
+		},
+		Run: daemon.RunDaemon,
 	}
 
 	for cmdName, cmd := range types.CommandRegistry {
@@ -47,8 +52,6 @@ func main() {
 	}
 
 	rootCmd.AddCommand(daemonCmd)
-
-	startupJobs()
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println("Error:", err)

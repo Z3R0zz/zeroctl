@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -42,12 +43,24 @@ func CacheWeatherData() error {
 		return err
 	}
 
-	body := data.Body()
+	var weather types.WeatherResponse
+	err = json.Unmarshal(data.Body(), &weather)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal weather data: %w", err)
+	}
 
-	err = database.StoreJsonData("weather", body)
+	err = database.StoreJsonData("weather", weather)
 	if err != nil {
 		return err
 	}
 
+	fmt.Println("Weather data cached")
+
+	weatherCached, err := GetWeather()
+	if err != nil {
+		fmt.Println("Failed to get weather data:", err)
+	} else {
+		fmt.Println("Weather data:", weatherCached)
+	}
 	return nil
 }

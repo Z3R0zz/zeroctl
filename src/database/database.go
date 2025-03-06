@@ -19,7 +19,7 @@ func InitBoltDB() error {
 	}
 
 	var err error
-	DB, err = bolt.Open(dbPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
+	DB, err = bolt.Open(dbPath, 0600, &bolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
 		return err
 	}
