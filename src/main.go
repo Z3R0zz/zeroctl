@@ -5,6 +5,7 @@ import (
 	"os"
 	"zeroctl/src/config"
 	"zeroctl/src/daemon"
+	"zeroctl/src/database"
 	"zeroctl/src/types"
 
 	"github.com/spf13/cobra"
@@ -15,6 +16,12 @@ func main() {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
+
+	if err := database.InitBoltDB(); err != nil {
+		fmt.Println("Error:", err)
+		os.Exit(1)
+	}
+	defer database.CloseBoltDB()
 
 	rootCmd := &cobra.Command{
 		Use:   "zeroctl",
