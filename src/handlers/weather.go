@@ -5,12 +5,24 @@ import (
 	"fmt"
 	"os"
 	"zeroctl/src/database"
+	"zeroctl/src/types"
 	"zeroctl/src/utils"
 
 	"github.com/valyala/fasthttp"
 )
 
-func GetWeather() (*fasthttp.Response, error) {
+func GetWeather() (*types.WeatherResponse, error) {
+	var weatherData types.WeatherResponse
+
+	err := database.GetJsonData("weather", &weatherData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get weather: %w", err)
+	}
+
+	return &weatherData, nil
+}
+
+func FetchWeather() (*fasthttp.Response, error) {
 	if os.Getenv("OPENWEATHER_API_KEY") == "" || os.Getenv("OPENWEATHER_CITY_ID") == "" || os.Getenv("OPENWEATHER_UNITS") == "" {
 		return nil, errors.New("OPENWEATHER_API_KEY, OPENWEATHER_CITY_ID, and OPENWEATHER_UNITS must be set")
 	}
@@ -25,12 +37,14 @@ func GetWeather() (*fasthttp.Response, error) {
 }
 
 func CacheWeatherData() error {
-	data, err := GetWeather()
+	data, err := FetchWeather()
 	if err != nil {
 		return err
 	}
 
-	err = database.StoreJsonData("weather", data)
+	body := data.Body()
+
+	err = database.StoreJsonData("weather", body)
 	if err != nil {
 		return err
 	}
