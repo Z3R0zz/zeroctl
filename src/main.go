@@ -8,6 +8,7 @@ import (
 	"zeroctl/src/database"
 	"zeroctl/src/handlers"
 	"zeroctl/src/types"
+	"zeroctl/src/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -19,6 +20,8 @@ func main() {
 	}
 
 	if len(os.Args) > 1 && os.Args[1] == "daemon" {
+		utils.SetStartTime()
+
 		if err := database.InitBoltDB(); err != nil {
 			fmt.Println("Error:", err)
 			os.Exit(1)
