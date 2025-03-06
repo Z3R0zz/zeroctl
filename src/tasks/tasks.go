@@ -24,6 +24,10 @@ func (s *Scheduler) InitScheduler() {
 		return handlers.RandomWallpaper()
 	})
 
+	s.scheduleJob("0 */15 * * * *", func(ctx context.Context) error {
+		return handlers.CacheWeatherData()
+	})
+
 	s.cronScheduler.Start()
 	logrus.Infof("Scheduler started")
 }

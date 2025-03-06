@@ -6,6 +6,7 @@ import (
 	"zeroctl/src/config"
 	"zeroctl/src/daemon"
 	"zeroctl/src/database"
+	"zeroctl/src/handlers"
 	"zeroctl/src/types"
 
 	"github.com/spf13/cobra"
@@ -47,8 +48,17 @@ func main() {
 
 	rootCmd.AddCommand(daemonCmd)
 
+	startupJobs()
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
+	}
+}
+
+func startupJobs() {
+	err := handlers.CacheWeatherData()
+	if err != nil {
+		fmt.Println("Error:", err)
 	}
 }
