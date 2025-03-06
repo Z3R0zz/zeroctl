@@ -54,13 +54,5 @@ func CacheWeatherData() error {
 		return err
 	}
 
-	fmt.Println("Weather data cached")
-
-	weatherCached, err := GetWeather()
-	if err != nil {
-		fmt.Println("Failed to get weather data:", err)
-	} else {
-		fmt.Println("Weather data:", weatherCached)
-	}
 	return nil
 }
