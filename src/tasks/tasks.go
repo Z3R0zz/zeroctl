@@ -21,10 +21,12 @@ func (s *Scheduler) InitScheduler() {
 	}
 
 	s.scheduleJob("0 */15 * * * *", func(ctx context.Context) error {
+		logrus.Infof("Refreshing wallpaper")
 		return handlers.RandomWallpaper()
 	})
 
 	s.scheduleJob("0 */15 * * * *", func(ctx context.Context) error {
+		logrus.Infof("Refreshing weather data")
 		return handlers.CacheWeatherData()
 	})
 
