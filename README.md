@@ -37,6 +37,12 @@ yay -S python-pywal16
     ./build.sh
     ```
 
+4. Add the following lines to your hyprland.conf:
+    ```sh
+    exec-once = zeroctl daemon | tee -a /var/log/zeroctl.log
+    exec-once = zeroctl wallpaper | tee -a /var/log/zeroctl.log # Optional
+    ```
+
 ## Usage
 
 ### Running the Daemon
