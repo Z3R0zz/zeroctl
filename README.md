@@ -2,6 +2,9 @@
 
 `zeroctl` is a custom CLI tool designed to manage various tasks such as changing wallpapers, fetching weather data, and more for Hyprland. It includes a daemon mode to run scheduled tasks and listen for commands.
 
+## Showcase
+![me](./.assets/showcase.gif)
+
 ## Features
 
 - **Wallpaper Management**: Randomize and set wallpapers.
