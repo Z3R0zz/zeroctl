@@ -41,7 +41,7 @@ func (s *Scheduler) scheduleJob(cronExpr string, job func(context.Context) error
 
 		err := job(ctx)
 		if err != nil {
-			logrus.Fatalf("Error running job: %v", err)
+			logrus.Errorf("Error running job: %v", err)
 		}
 	})
 	if err != nil {

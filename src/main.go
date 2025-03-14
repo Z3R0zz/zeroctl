@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"zeroctl/src/config"
 	"zeroctl/src/daemon"
@@ -10,21 +9,20 @@ import (
 	"zeroctl/src/types"
 	"zeroctl/src/utils"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 func main() {
 	if err := config.LoadEnv(); err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
+		logrus.Fatalf("Error: %v", err)
 	}
 
 	if len(os.Args) > 1 && os.Args[1] == "daemon" {
 		utils.SetStartTime()
 
 		if err := database.InitBoltDB(); err != nil {
-			fmt.Println("Error:", err)
-			os.Exit(1)
+			logrus.Fatalf("Error: %v", err)
 		}
 		defer database.CloseBoltDB()
 	}
@@ -57,14 +55,13 @@ func main() {
 	rootCmd.AddCommand(daemonCmd)
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println("Error:", err)
-		os.Exit(1)
+		logrus.Fatalf("Error: %v", err)
 	}
 }
 
 func startupJobs() {
 	err := handlers.CacheWeatherData()
 	if err != nil {
-		fmt.Println("Error:", err)
+		logrus.Errorf("Error: %v", err)
 	}
 }
