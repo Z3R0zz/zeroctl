@@ -2,7 +2,7 @@ package database
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"os"
 	"path/filepath"
 	"time"
@@ -10,9 +10,14 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-var dbPath = filepath.Join(os.Getenv("HOME"), ".config/zeroctl/zero.db")
-var DB *bolt.DB
-var Bucket = "cache"
+var (
+	dbPath = filepath.Join(os.Getenv("HOME"), ".config/zeroctl/zero.db")
+	DB     *bolt.DB
+	Bucket = "cache"
+
+	ErrBucketNotFound = errors.New("bucket not found")
+	ErrKeyNotFound    = errors.New("key not found")
+)
 
 func InitBoltDB() error {
 	if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {
@@ -42,11 +47,11 @@ func GetValue(key string) (string, error) {
 	err := DB.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(Bucket))
 		if bucket == nil {
-			return fmt.Errorf("bucket '%s' not found", Bucket)
+			return ErrBucketNotFound
 		}
 		v := bucket.Get([]byte(key))
 		if v == nil {
-			return fmt.Errorf("key '%s' not found", key)
+			return ErrKeyNotFound
 		}
 		value = string(v)
 		return nil
@@ -58,7 +63,7 @@ func DeleteValue(key string) error {
 	return DB.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(Bucket))
 		if bucket == nil {
-			return fmt.Errorf("bucket '%s' not found", Bucket)
+			return ErrBucketNotFound
 		}
 		return bucket.Delete([]byte(key))
 	})
@@ -68,7 +73,7 @@ func StoreValue(key, value string) error {
 	return DB.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(Bucket))
 		if bucket == nil {
-			return fmt.Errorf("bucket '%s' not found", Bucket)
+			return ErrBucketNotFound
 		}
 		return bucket.Put([]byte(key), []byte(value))
 	})
@@ -83,7 +88,7 @@ func StoreJsonData(key string, value interface{}) error {
 	return DB.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(Bucket))
 		if b == nil {
-			return fmt.Errorf("bucket '%s' not found", Bucket)
+			return ErrBucketNotFound
 		}
 		return b.Put([]byte(key), data)
 	})
@@ -93,12 +98,12 @@ func GetJsonData(key string, dest interface{}) error {
 	return DB.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(Bucket))
 		if b == nil {
-			return fmt.Errorf("bucket '%s' not found", Bucket)
+			return ErrBucketNotFound
 		}
 
 		data := b.Get([]byte(key))
 		if data == nil {
-			return fmt.Errorf("key '%s' not found", key)
+			return ErrKeyNotFound
 		}
 
 		return json.Unmarshal(data, dest)
