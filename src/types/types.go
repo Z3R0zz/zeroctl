@@ -3,7 +3,7 @@ package types
 type Command struct {
 	Name        string
 	Description string
-	Handler     func() string
+	Handler     func([]string) string
 }
 
 var CommandRegistry = map[string]Command{}

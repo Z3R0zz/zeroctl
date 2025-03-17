@@ -12,7 +12,7 @@ func init() {
 	types.RegisterCommand(types.Command{
 		Name:        "stats",
 		Description: "Get stats about zeroctl and its usage",
-		Handler: func() string {
+		Handler: func(args []string) string {
 			var memStats runtime.MemStats
 			runtime.ReadMemStats(&memStats)
 

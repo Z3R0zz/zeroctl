@@ -1,20 +1,19 @@
 package daemon
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
-
+	_ "zeroctl/src/commands"
 	"zeroctl/src/tasks"
 	"zeroctl/src/types"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-
-	_ "zeroctl/src/commands"
 )
 
 const socketPath = "/tmp/zeroctl.sock"
@@ -44,7 +43,6 @@ func RunDaemon(cmd *cobra.Command, args []string) {
 	}()
 
 	logrus.Infof("Daemon is running and listening on %s", socketPath)
-
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -55,32 +53,41 @@ func RunDaemon(cmd *cobra.Command, args []string) {
 	}
 }
 
+type CommandMessage struct {
+	Command string   `json:"command"`
+	Args    []string `json:"args"`
+}
+
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 4096)
 	n, err := conn.Read(buffer)
 	if err != nil {
 		logrus.Error("Error reading from socket: ", err)
 		return
 	}
 
-	command := string(buffer[:n])
-	response := processCommand(command)
+	var cmdMsg CommandMessage
+	if err := json.Unmarshal(buffer[:n], &cmdMsg); err != nil {
+		logrus.Errorf("Error unmarshaling command message: %v", err)
+		conn.Write([]byte("Error parsing command message\n"))
+		return
+	}
+
+	response := processCommand(cmdMsg.Command, cmdMsg.Args)
 	conn.Write([]byte(response))
 }
 
-func processCommand(cmdStr string) string {
+func processCommand(cmdStr string, args []string) string {
 	cmdStr = strings.TrimSpace(cmdStr)
-
 	if cmd, exists := types.GetCommand(cmdStr); exists {
-		return cmd.Handler()
+		return cmd.Handler(args)
 	}
-
 	return "Unknown command\n"
 }
 
-func RunClient(command string) {
+func RunClient(command string, args []string) {
 	conn, err := net.Dial("unix", socketPath)
 	if err != nil {
 		fmt.Println("Error connecting to zeroctl daemon:", err)
@@ -88,18 +95,34 @@ func RunClient(command string) {
 	}
 	defer conn.Close()
 
-	_, err = conn.Write([]byte(command))
+	cmdMsg := CommandMessage{
+		Command: command,
+		Args:    args,
+	}
+
+	payload, err := json.Marshal(cmdMsg)
+	if err != nil {
+		fmt.Println("Error encoding command:", err)
+		return
+	}
+
+	_, err = conn.Write(payload)
 	if err != nil {
 		fmt.Println("Error sending command:", err)
 		return
 	}
 
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 4096)
 	n, err := conn.Read(buffer)
 	if err != nil {
 		fmt.Println("Error reading response:", err)
 		return
 	}
 
-	fmt.Print(string(buffer[:n]))
+	response := string(buffer[:n])
+	if len(response) > 0 && !strings.HasSuffix(response, "\n") {
+		response += "\n"
+	}
+
+	fmt.Print(response)
 }

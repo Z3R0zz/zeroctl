@@ -10,7 +10,7 @@ func init() {
 	types.RegisterCommand(types.Command{
 		Name:        "uptime",
 		Description: "Display how long the zeroctl daemon has been running",
-		Handler: func() string {
+		Handler: func(args []string) string {
 			uptime := utils.GetUptime()
 
 			hours := int(uptime.Hours()) % 24

@@ -10,7 +10,7 @@ func init() {
 	types.RegisterCommand(types.Command{
 		Name:        "weather",
 		Description: "Get the current weather",
-		Handler: func() string {
+		Handler: func(args []string) string {
 			weather, err := handlers.GetWeather()
 			if err != nil {
 				return "Failed to get weather: " + err.Error() + "\n"

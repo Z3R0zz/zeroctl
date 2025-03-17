@@ -46,7 +46,7 @@ func main() {
 			Use:   cmdName,
 			Short: cmd.Description,
 			Run: func(cobraCmd *cobra.Command, args []string) {
-				daemon.RunClient(cmdName)
+				daemon.RunClient(cmdName, args)
 			},
 		}
 		rootCmd.AddCommand(localCmd)

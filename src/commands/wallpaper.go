@@ -11,7 +11,7 @@ func init() {
 	types.RegisterCommand(types.Command{
 		Name:        "wallpaper",
 		Description: "Randomize wallpaper",
-		Handler: func() string {
+		Handler: func(args []string) string {
 			err := handlers.RandomWallpaper()
 			if err != nil {
 				logrus.Errorf("Failed to change wallpaper: %v", err)
