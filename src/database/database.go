@@ -2,7 +2,7 @@ package database
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -12,6 +12,7 @@ import (
 
 var dbPath = filepath.Join(os.Getenv("HOME"), ".config/zeroctl/zero.db")
 var DB *bolt.DB
+var Bucket = "cache"
 
 func InitBoltDB() error {
 	if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {
@@ -25,7 +26,7 @@ func InitBoltDB() error {
 	}
 
 	return DB.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte("cache"))
+		_, err := tx.CreateBucketIfNotExists([]byte(Bucket))
 		return err
 	})
 }
@@ -36,6 +37,43 @@ func CloseBoltDB() {
 	}
 }
 
+func GetValue(key string) (string, error) {
+	var value string
+	err := DB.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(Bucket))
+		if bucket == nil {
+			return fmt.Errorf("bucket '%s' not found", Bucket)
+		}
+		v := bucket.Get([]byte(key))
+		if v == nil {
+			return fmt.Errorf("key '%s' not found", key)
+		}
+		value = string(v)
+		return nil
+	})
+	return value, err
+}
+
+func DeleteValue(key string) error {
+	return DB.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(Bucket))
+		if bucket == nil {
+			return fmt.Errorf("bucket '%s' not found", Bucket)
+		}
+		return bucket.Delete([]byte(key))
+	})
+}
+
+func StoreValue(key, value string) error {
+	return DB.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(Bucket))
+		if bucket == nil {
+			return fmt.Errorf("bucket '%s' not found", Bucket)
+		}
+		return bucket.Put([]byte(key), []byte(value))
+	})
+}
+
 func StoreJsonData(key string, value interface{}) error {
 	data, err := json.Marshal(value)
 	if err != nil {
@@ -43,9 +81,9 @@ func StoreJsonData(key string, value interface{}) error {
 	}
 
 	return DB.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("cache"))
+		b := tx.Bucket([]byte(Bucket))
 		if b == nil {
-			return errors.New("cache bucket does not exist")
+			return fmt.Errorf("bucket '%s' not found", Bucket)
 		}
 		return b.Put([]byte(key), data)
 	})
@@ -53,14 +91,14 @@ func StoreJsonData(key string, value interface{}) error {
 
 func GetJsonData(key string, dest interface{}) error {
 	return DB.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("cache"))
+		b := tx.Bucket([]byte(Bucket))
 		if b == nil {
-			return errors.New("cache bucket does not exist")
+			return fmt.Errorf("bucket '%s' not found", Bucket)
 		}
 
 		data := b.Get([]byte(key))
 		if data == nil {
-			return errors.New("key not found")
+			return fmt.Errorf("key '%s' not found", key)
 		}
 
 		return json.Unmarshal(data, dest)
