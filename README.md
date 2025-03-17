@@ -10,6 +10,7 @@
 - **Wallpaper Management**: Randomize and set wallpapers.
 - **Weather Data**: Fetch and cache weather data from OpenWeather API.
 - **Task Scheduling**: Schedule and run periodic tasks.
+- **Task Toggling**: Enable or disable specific tasks.
 - **System Stats**: Display system statistics and uptime.
 
 ## Installation
@@ -75,6 +76,11 @@ zeroctl daemon
 - **uptime**: Display how long the zeroctl daemon has been running
     ```sh
     zeroctl uptime
+    ```
+
+- **toggle**: Enable or disable a task
+    ```sh
+    zeroctl toggle <task_name>
     ```
 
 ## Environment Variables
