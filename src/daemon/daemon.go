@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	_ "zeroctl/src/commands"
+	"zeroctl/src/commands"
 	"zeroctl/src/tasks"
 	"zeroctl/src/types"
 
@@ -26,6 +26,8 @@ func RunDaemon(cmd *cobra.Command, args []string) {
 	scheduler := &tasks.Scheduler{}
 	scheduler.InitScheduler()
 	defer scheduler.StopScheduler()
+
+	commands.SetScheduler(scheduler)
 
 	listener, err := net.Listen("unix", socketPath)
 	if err != nil {
