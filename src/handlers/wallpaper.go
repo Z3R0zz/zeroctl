@@ -18,10 +18,21 @@ func RandomWallpaper() error {
 	}
 
 	wallpaperPath := os.Getenv("WALLPAPERS_DIR") + wallpaper
+	if err := applyWallpaper(wallpaperPath); err != nil {
+		return err
+	}
 
-	err = initSwww()
-	if err != nil {
-		logrus.Errorf("Shit went sideways: %v", err)
+	logrus.Infof("Changed wallpaper to %s", wallpaper)
+	return nil
+}
+
+func SetWallpaper(wallpaperPath string) error {
+	return applyWallpaper(wallpaperPath)
+}
+
+func applyWallpaper(wallpaperPath string) error {
+	if err := initSwww(); err != nil {
+		logrus.Errorf("Initialization error: %v", err)
 		return err
 	}
 
@@ -59,7 +70,6 @@ func RandomWallpaper() error {
 		}
 	}
 
-	logrus.Infof("Changed wallpaper to %s", wallpaper)
 	return nil
 }
 
@@ -73,8 +83,7 @@ func initSwww() error {
 	cmd = exec.Command("swww-daemon")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Start()
-	if err != nil {
+	if err := cmd.Start(); err != nil {
 		return err
 	}
 
